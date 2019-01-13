@@ -1,0 +1,10 @@
+[package]
+name = "libextra"
+version = "0.1.0"
+authors = ["playXE <adel.prokurov@protonmail.com>"]
+edition = "2018"
+license = "MIT"
+readme = "README.md"
+keywords = ["extra","libextra"]
+
+[dependencies]
