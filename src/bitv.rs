@@ -1,7 +1,5 @@
-use std::iter::{Iterator,repeat};
-use std::cmp::{min,max};
-
-
+use std::cmp::{max, min};
+use std::iter::{repeat, Iterator};
 
 #[inline]
 fn iterate_bits(base: usize, bits: usize, f: &Fn(usize) -> bool) -> bool {
@@ -17,8 +15,6 @@ fn iterate_bits(base: usize, bits: usize, f: &Fn(usize) -> bool) -> bool {
     }
     return true;
 }
-
-
 
 pub fn big_mask(nbits: usize, elem: usize) -> usize {
     let rmd = nbits % 64;
@@ -136,7 +132,6 @@ pub struct BitvSetIterator<'a> {
     next_idx: usize,
 }
 
-
 impl<'a> Iterator for BitvSetIterator<'a> {
     type Item = usize;
     #[inline]
@@ -159,22 +154,30 @@ impl BitvSet {
         }
     }
 
-    pub fn common_iter<'a>(&'a self,other: &'a BitvSet) -> impl Iterator<Item=(usize, usize, usize)> + 'a {
+    pub fn common_iter<'a>(
+        &'a self,
+        other: &'a BitvSet,
+    ) -> impl Iterator<Item = (usize, usize, usize)> + 'a {
         let min = min(self.bitv.storage.len(), other.bitv.storage.len());
-        self.bitv.storage[0..min].iter().enumerate()
+        self.bitv.storage[0..min]
+            .iter()
+            .enumerate()
             .zip(repeat(&other.bitv.storage))
             .map(|((i, &w), o_store)| (i * 64, w, o_store[i]))
     }
-    pub fn outlier_iter<'a>(&'a self,other: &'a BitvSet) -> impl Iterator<Item=(bool,usize,usize)> + 'a {
+    pub fn outlier_iter<'a>(
+        &'a self,
+        other: &'a BitvSet,
+    ) -> impl Iterator<Item = (bool, usize, usize)> + 'a {
         let slen = self.bitv.storage.len();
         let olen = other.bitv.storage.len();
 
-        
-        return self.bitv.storage[0..olen].iter().enumerate()
-                .zip(repeat(olen))
-                .map(move |((i, &w), min)| (olen < slen, (i + min) * 64, w));
+        return self.bitv.storage[0..olen]
+            .iter()
+            .enumerate()
+            .zip(repeat(olen))
+            .map(move |((i, &w), min)| (olen < slen, (i + min) * 64, w));
     }
-
 
     pub fn difference(&self, other: &BitvSet, f: &fn(&usize) -> bool) -> bool {
         /*for (i, w1, w2) in self.common_iter(other) {
@@ -188,7 +191,6 @@ impl BitvSet {
         )*/
         unimplemented!()
     }
-
 
     pub fn capacity(&self) -> usize {
         self.bitv.storage.len() * 64
@@ -204,7 +206,8 @@ impl BitvSet {
 
     pub fn iter<'a>(&'a self) -> BitvSetIterator {
         BitvSetIterator {
-            set: self,next_idx: 0
+            set: self,
+            next_idx: 0,
         }
     }
 

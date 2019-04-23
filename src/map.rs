@@ -1,8 +1,6 @@
-use std::hash::{Hash,Hasher};
 use crate::vec::VecUtils;
+use std::hash::{Hash, Hasher};
 use std::iter::{Enumerate, FilterMap};
-
-
 
 //#[derive(Hash, PartialEq, Eq)]
 pub struct SmallIntMap<T> {
@@ -10,36 +8,35 @@ pub struct SmallIntMap<T> {
 }
 
 impl<T: Hash> Hash for SmallIntMap<T> {
-    fn hash<H: Hasher>(&self,state: &mut H) {
+    fn hash<H: Hasher>(&self, state: &mut H) {
         self.v.hash(state);
     }
-
 }
 
 impl<T: PartialEq> PartialEq for SmallIntMap<T> {
-    fn eq(&self,other: &Self) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self == other
     }
 }
 
 impl<T: Eq> Eq for SmallIntMap<T> {}
 
-impl<T: Clone > Clone for SmallIntMap<T> {
+impl<T: Clone> Clone for SmallIntMap<T> {
     fn clone(&self) -> SmallIntMap<T> {
         SmallIntMap { v: self.v.clone() }
     }
 }
 
-pub struct SmallIntMapIterator<'a,T> {
+pub struct SmallIntMapIterator<'a, T> {
     front: usize,
     back: usize,
-    iter: Iterator<Item=Option<T>> + 'a,
+    iter: Iterator<Item = Option<T>> + 'a,
 }
 
 macro_rules! iterator {
     (impl $name:ident -> $elem:ty, $getter:ident) => {
-        impl<'a, T: 'a> Iterator for $name<'a, T> {
-            type Item = $elem;
+        impl<'a, T: 'a> Iterator for $name<T> {
+            type Item = (usize, &'a T);
             #[inline]
             fn next(&mut self) -> Option<$elem> {
                 while self.front < self.back {
@@ -48,10 +45,10 @@ macro_rules! iterator {
                             if elem.is_some() {
                                 let index = self.front;
                                 self.front += 1;
-                                return Some((index, elem. $getter ().unwrap()));
+                                return Some((index, elem.$getter().unwrap()));
                             }
                         }
-                        _ => ()
+                        _ => (),
                     }
                     self.front += 1;
                 }
@@ -63,11 +60,40 @@ macro_rules! iterator {
                 (0, Some(self.back - self.front))
             }
         }
+    };
+}
+
+impl<'a, T: 'a> Iterator for SmallIntMapIterator<'a, T> {
+    type Item = (usize, &'a T);
+    #[inline]
+    fn next(&mut self) -> Option<(usize, &'a T)> {
+        while self.front < self.back {
+            match self.iter.next() {
+                Some(elem) => {
+                    if elem.is_some() {
+                        let index = self.front;
+                        self.front += 1;
+                        unsafe {
+                            let eptr: *const T = &elem.unwrap() as *const T;
+                            return Some((index, &*eptr));
+                        }
+                    }
+                }
+                _ => (),
+            }
+            self.front += 1;
+        }
+        None
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.back - self.front))
     }
 }
 
 //TODO
-//iterator!(impl SmallIntMap -> (usize,&'a T),as_ref)'
+//iterator!(impl SmallIntMap -> (usize,&'a T),as_ref);
 
 impl<T> SmallIntMap<T> {
     pub fn new() -> SmallIntMap<T> {
